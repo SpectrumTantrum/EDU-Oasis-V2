@@ -1,6 +1,7 @@
 'use client';
 
 import { useFocusFlowStore } from '@/store/useFocusFlowStore';
+import UserMenu from './UserMenu';
 
 export default function MasteryBar() {
   const { learnerState, knowledgeGraph, getSessionMinutes } = useFocusFlowStore();
@@ -51,8 +52,9 @@ export default function MasteryBar() {
           </span>
         </div>
 
-        {/* Right: Session info */}
+        {/* Right: Session info + user */}
         <div className="flex items-center gap-3">
+          <UserMenu />
           <span className="text-[10px] text-white/60 font-mono">{minutes}m</span>
           <span
             className="text-[10px] font-mono font-bold px-2 py-0.5 rounded"

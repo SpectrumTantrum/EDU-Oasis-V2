@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useState, useCallback, useEffect } from 'react';
 import { useFocusFlowStore } from '@/store/useFocusFlowStore';
+import { createClient } from '@/lib/supabase/client';
 import { UploadPanel } from '@/components/panels/UploadPanel';
 import { QuizPanel } from '@/components/panels/QuizPanel';
 import { StudyPanel } from '@/components/panels/StudyPanel';
@@ -179,11 +180,23 @@ function AdaptiveSync() {
 
 export default function Home() {
   const [dialogueNPC, setDialogueNPC] = useState<NPC | null>(null);
-  const { setActivePanel, learnerState, startSession } = useFocusFlowStore();
+  const { setActivePanel, learnerState, startSession, setUserId } = useFocusFlowStore();
 
   useEffect(() => {
     startSession();
   }, [startSession]);
+
+  // Hydrate auth user ID into the store
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, [setUserId]);
 
   const cognitiveState = learnerState.cognitive_state;
   const concepts = Object.entries(learnerState.concepts);

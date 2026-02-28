@@ -28,6 +28,10 @@ export interface LearnerConceptRecord {
 // ─── Store Interface ────────────────────────────────────────────────────────
 
 interface FocusFlowState {
+  // Auth user ID
+  userId: string | null;
+  setUserId: (id: string | null) => void;
+
   // Knowledge graph (from /api/ingest)
   knowledgeGraph: KnowledgeGraph | null;
   setKnowledgeGraph: (graph: KnowledgeGraph | null) => void;
@@ -83,6 +87,10 @@ const defaultLearnerState: LearnerStateSnapshot = {
 };
 
 export const useFocusFlowStore = create<FocusFlowState>((set, get) => ({
+  // ── Auth User ID ────────────────────────────────────────
+  userId: null,
+  setUserId: (userId) => set({ userId }),
+
   // ── Knowledge Graph ───────────────────────────────────
   knowledgeGraph: null,
   setKnowledgeGraph: (knowledgeGraph) => set({ knowledgeGraph }),
@@ -107,7 +115,7 @@ export const useFocusFlowStore = create<FocusFlowState>((set, get) => ({
     set((state) => {
       const existing = state.conceptRecords[partial.concept_id] ?? {
         concept_id: partial.concept_id,
-        user_id: 'demo-user',
+        user_id: get().userId ?? 'demo-user',
         mastery: 0,
         attempts: 0,
         last_seen: new Date().toISOString(),
@@ -122,15 +130,16 @@ export const useFocusFlowStore = create<FocusFlowState>((set, get) => ({
         },
       };
     }),
-  initConceptRecordsFromGraph: (graph, userId = 'demo-user') =>
-    set(() => {
+  initConceptRecordsFromGraph: (graph, userId) =>
+    set((state) => {
+      const effectiveUserId = userId ?? state.userId ?? 'demo-user';
       const records: Record<string, LearnerConceptRecord> = {};
       const concepts: LearnerStateSnapshot['concepts'] = {};
       const now = new Date().toISOString();
       for (const c of graph.concepts) {
         records[c.concept_id] = {
           concept_id: c.concept_id,
-          user_id: userId,
+          user_id: effectiveUserId,
           mastery: c.mastery ?? 0,
           attempts: c.attempts ?? 0,
           last_seen: c.last_seen ?? now,
@@ -187,6 +196,7 @@ export const useFocusFlowStore = create<FocusFlowState>((set, get) => ({
   // ── Reset ─────────────────────────────────────────────
   reset: () =>
     set({
+      userId: null,
       knowledgeGraph: null,
       learnerState: { ...defaultLearnerState },
       conceptRecords: {},

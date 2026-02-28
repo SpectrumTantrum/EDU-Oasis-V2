@@ -1,4 +1,11 @@
 import { TILE_SIZE, TILE_COLORS } from '@/lib/constants';
+import { SpriteSheet } from './SpriteSheet';
+import {
+  SPRITE_SHEET_PATH,
+  SPRITE_TILE_SIZE,
+  SPRITE_MARGIN,
+  TILE_SPRITE_MAP,
+} from '@/lib/sprite-config';
 import type { Camera } from './Camera';
 import type { MapDefinition, MapLabel } from './MapDefinition';
 
@@ -18,6 +25,20 @@ const FURNITURE_LABELS: Record<number, string> = {
   9: 'Tutor',
 };
 
+let sharedSpriteSheet: SpriteSheet | null = null;
+
+function getSpriteSheet(): SpriteSheet {
+  if (!sharedSpriteSheet) {
+    sharedSpriteSheet = new SpriteSheet(
+      SPRITE_SHEET_PATH,
+      SPRITE_TILE_SIZE,
+      SPRITE_TILE_SIZE,
+      SPRITE_MARGIN,
+    );
+  }
+  return sharedSpriteSheet;
+}
+
 export class TileMap {
   readonly cols: number;
   readonly rows: number;
@@ -25,6 +46,7 @@ export class TileMap {
   private furnitureMap: number[][];
   private labels: MapLabel[];
   private groundCache: OffscreenCanvas | null = null;
+  private spriteSheet: SpriteSheet;
 
   constructor(mapDef: MapDefinition) {
     this.cols = mapDef.cols;
@@ -32,6 +54,7 @@ export class TileMap {
     this.groundMap = mapDef.groundMap;
     this.furnitureMap = mapDef.furnitureMap;
     this.labels = mapDef.labels ?? [];
+    this.spriteSheet = getSpriteSheet();
   }
 
   isWalkable(col: number, row: number): boolean {
@@ -75,17 +98,30 @@ export class TileMap {
   }
 
   drawGround(ctx: CanvasRenderingContext2D, camera: Camera, masteryTint?: number): void {
-    if (!this.groundCache) {
+    const ss = this.spriteSheet;
+    const useSprites = ss.isReady();
+
+    if (!this.groundCache || (useSprites && (this.groundCache as unknown as { _hasSprites?: boolean })._hasSprites !== true)) {
       this.groundCache = new OffscreenCanvas(this.cols * TILE_SIZE, this.rows * TILE_SIZE);
       const offCtx = this.groundCache.getContext('2d')!;
+      offCtx.imageSmoothingEnabled = false;
+
       for (let r = 0; r < this.rows; r++) {
         for (let c = 0; c < this.cols; c++) {
           const tile = this.groundMap[r][c];
-          offCtx.fillStyle = TILE_COLORS[tile] ?? '#ff00ff';
-          offCtx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-          offCtx.strokeStyle = 'rgba(0,0,0,0.05)';
-          offCtx.strokeRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          const sprite = useSprites ? TILE_SPRITE_MAP[tile] : undefined;
+
+          if (sprite) {
+            ss.drawFrame(offCtx as unknown as CanvasRenderingContext2D, sprite.col, sprite.row, c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          } else {
+            offCtx.fillStyle = TILE_COLORS[tile] ?? '#ff00ff';
+            offCtx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          }
         }
+      }
+
+      if (useSprites) {
+        (this.groundCache as unknown as { _hasSprites?: boolean })._hasSprites = true;
       }
     }
     ctx.drawImage(this.groundCache, -camera.x, -camera.y);
@@ -107,6 +143,9 @@ export class TileMap {
   }
 
   drawFurniture(ctx: CanvasRenderingContext2D, camera: Camera, masteryTint?: number): void {
+    const ss = this.spriteSheet;
+    const useSprites = ss.isReady();
+
     for (let r = 0; r < this.rows; r++) {
       for (let c = 0; c < this.cols; c++) {
         const furn = this.furnitureMap[r][c];
@@ -114,25 +153,38 @@ export class TileMap {
 
         const dx = c * TILE_SIZE - camera.x;
         const dy = r * TILE_SIZE - camera.y;
+        const sprite = useSprites ? TILE_SPRITE_MAP[furn] : undefined;
 
-        let color = TILE_COLORS[furn] ?? '#ff00ff';
-        if (furn === 7 && masteryTint !== undefined) {
-          color = masteryTint >= 70 ? '#ffe880' : masteryTint >= 40 ? '#c0d8e8' : '#8898a8';
-        }
+        if (sprite) {
+          ss.drawFrame(ctx, sprite.col, sprite.row, dx, dy, TILE_SIZE, TILE_SIZE);
 
-        ctx.fillStyle = color;
-        ctx.fillRect(dx, dy, TILE_SIZE, TILE_SIZE);
+          if (furn === 7 && masteryTint !== undefined) {
+            const tint = masteryTint >= 70 ? 'rgba(255,232,128,0.35)'
+                       : masteryTint >= 40 ? 'rgba(192,216,232,0.35)'
+                       : 'rgba(136,152,168,0.35)';
+            ctx.fillStyle = tint;
+            ctx.fillRect(dx, dy, TILE_SIZE, TILE_SIZE);
+          }
+        } else {
+          let color = TILE_COLORS[furn] ?? '#ff00ff';
+          if (furn === 7 && masteryTint !== undefined) {
+            color = masteryTint >= 70 ? '#ffe880' : masteryTint >= 40 ? '#c0d8e8' : '#8898a8';
+          }
 
-        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(dx + 0.5, dy + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
+          ctx.fillStyle = color;
+          ctx.fillRect(dx, dy, TILE_SIZE, TILE_SIZE);
 
-        const label = FURNITURE_LABELS[furn];
-        if (label) {
-          ctx.fillStyle = '#202020';
-          ctx.font = '7px monospace';
-          ctx.textAlign = 'center';
-          ctx.fillText(label, dx + TILE_SIZE / 2, dy + TILE_SIZE / 2 + 2);
+          ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(dx + 0.5, dy + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
+
+          const label = FURNITURE_LABELS[furn];
+          if (label) {
+            ctx.fillStyle = '#202020';
+            ctx.font = '7px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, dx + TILE_SIZE / 2, dy + TILE_SIZE / 2 + 2);
+          }
         }
       }
     }
