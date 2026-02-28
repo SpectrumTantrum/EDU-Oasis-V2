@@ -1,0 +1,25 @@
+{
+  "updates": [
+    {
+      "concept_id": "binary-search",
+      "mastery_change": 12,
+      "new_mastery": 62
+    },
+    {
+      "concept_id": "arrays",
+      "mastery_change": 5,
+      "new_mastery": 75
+    }
+  ],
+  "learner_state": {
+    "concepts": {
+      "binary-search": { "mastery": 62, "last_seen": "2026-02-28T12:00:00Z", "error_patterns": [] },
+      "arrays": { "mastery": 75, "last_seen": "2026-02-28T12:01:00Z", "error_patterns": [] },
+      "linked-lists": { "mastery": 30, "last_seen": "2026-02-28T11:00:00Z", "error_patterns": ["pointer confusion"] },
+      "recursion": { "mastery": 15, "last_seen": "2026-02-28T10:00:00Z", "error_patterns": ["base case confusion"] },
+      "sorting-algorithms": { "mastery": 0, "last_seen": "2026-02-28T09:00:00Z", "error_patterns": [] }
+    },
+    "cognitive_state": "okay",
+    "session_minutes": 25
+  }
+}

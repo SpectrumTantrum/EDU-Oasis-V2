@@ -1,0 +1,7 @@
+{
+  "cognitive_state": "focused",
+  "chunk_size": "long",
+  "difficulty_bias": "harder",
+  "preferred_modality": "step-by-step",
+  "suggest_break": false
+}

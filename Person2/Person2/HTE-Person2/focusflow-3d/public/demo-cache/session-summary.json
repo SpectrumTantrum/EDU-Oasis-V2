@@ -1,0 +1,9 @@
+{
+  "summary": "- You reviewed binary search and recursion foundations.\n- Strong point: you followed the divide-and-check pattern consistently.\n- Next step: do one medium quiz on binary search tomorrow and explain each answer out loud.",
+  "format": "bullets",
+  "conceptsStudied": [
+    "binary-search",
+    "recursion"
+  ],
+  "sessionMinutes": 25
+}

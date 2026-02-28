@@ -1,0 +1,5 @@
+{
+  "concept_id": "binary-search",
+  "mode": "step-by-step",
+  "explanation": "1) Start with a sorted list and check the middle item.\n2) If the middle equals the target, you are done.\n3) If the target is smaller, keep only the left half.\n4) If the target is larger, keep only the right half.\n5) Repeat until found or until no items remain."
+}

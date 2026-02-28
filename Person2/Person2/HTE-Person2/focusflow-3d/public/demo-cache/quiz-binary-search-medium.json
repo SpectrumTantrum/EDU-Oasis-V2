@@ -1,0 +1,17 @@
+{
+  "questions": [
+    {
+      "concept_id": "binary-search",
+      "question": "In binary search, what must be true before you start searching an array?",
+      "options": [
+        "The array must be sorted",
+        "The array must have unique values",
+        "The target must be in the first half",
+        "The array length must be even"
+      ],
+      "correct_index": 0,
+      "difficulty": "medium",
+      "explanation": "Binary search relies on order to decide which half can be discarded after each comparison."
+    }
+  ]
+}

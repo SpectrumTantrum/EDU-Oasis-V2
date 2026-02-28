@@ -1,0 +1,23 @@
+{
+  "next_concept_id": "linked-lists",
+  "difficulty": "medium",
+  "modality": "visual",
+  "chunk_size": "medium",
+  "activity": "review",
+  "room_commands": [
+    { "type": "neutral" },
+    { "type": "lock_concept", "concept_id": "sorting-algorithms" },
+    { "type": "unlock_concept", "concept_id": "binary-search" },
+    { "type": "unlock_concept", "concept_id": "arrays" },
+    { "type": "unlock_concept", "concept_id": "linked-lists" },
+    { "type": "unlock_concept", "concept_id": "recursion" }
+  ],
+  "reasoning": "Selected \"Linked Lists\" (mastery: 30%) from review needed pool. Cognitive state: okay.",
+  "prerequisite_locks": [
+    { "concept_id": "binary-search", "locked": false, "unmet_prerequisites": [] },
+    { "concept_id": "arrays", "locked": false, "unmet_prerequisites": [] },
+    { "concept_id": "linked-lists", "locked": false, "unmet_prerequisites": [] },
+    { "concept_id": "recursion", "locked": false, "unmet_prerequisites": [] },
+    { "concept_id": "sorting-algorithms", "locked": true, "unmet_prerequisites": ["arrays", "recursion"] }
+  ]
+}
