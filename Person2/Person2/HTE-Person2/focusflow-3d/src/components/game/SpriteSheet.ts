@@ -5,14 +5,17 @@ export class SpriteSheet {
   private loaded = false;
   readonly frameWidth: number;
   readonly frameHeight: number;
+  readonly margin: number;
 
   constructor(
     src?: string,
     frameWidth = TILE_SIZE,
     frameHeight = TILE_SIZE,
+    margin = 0,
   ) {
     this.frameWidth = frameWidth;
     this.frameHeight = frameHeight;
+    this.margin = margin;
 
     if (src) {
       this.image = new Image();
@@ -35,10 +38,11 @@ export class SpriteSheet {
     destH = this.frameHeight,
   ): void {
     if (!this.image || !this.loaded) return;
+    const stride = this.frameWidth + this.margin;
     ctx.drawImage(
       this.image,
-      frameCol * this.frameWidth,
-      frameRow * this.frameHeight,
+      frameCol * stride,
+      frameRow * stride,
       this.frameWidth,
       this.frameHeight,
       destX,

@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg-grid: linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px
+    );
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  @apply bg-oasis-bg text-oasis-text min-h-screen;
+  font-family: var(--font-pixel, "Press Start 2P", "ui-monospace", "SFMono-Regular", "Consolas",
+        "Liberation Mono", "Menlo", "monospace");
+  background-image: var(--bg-grid);
+  background-size: 24px 24px;
+}
+
+a {
+  @apply text-oasis-accent underline underline-offset-4;
+}
+
+.glass-card {
+  @apply bg-oasis-glass border border-oasis-border/60 shadow-glow backdrop-blur-lg rounded-pixel;
+}
+
+.focus-ring {
+  @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-oasis-accent;
+}
+
+.pixel-btn {
+  @apply relative inline-flex items-center justify-center px-4 py-3 uppercase text-xs tracking-wide border border-oasis-border rounded-pixel transition duration-200 ease-out bg-gradient-to-b from-oasis-accent/90 to-oasis-accent/70 text-oasis-bg shadow-glow focus-ring;
+}
+
+.pixel-btn:disabled {
+  @apply opacity-50 cursor-not-allowed shadow-none;
+}
+
+.pixel-input {
+  @apply w-full rounded-pixel border border-oasis-border/50 bg-oasis-glass px-3 py-3 text-sm placeholder:text-oasis-muted transition focus-ring;
+}
+
+.pixel-input:focus {
+  @apply border-oasis-accent;
+}
+
+.pixel-input.error {
+  @apply border-oasis-error text-oasis-error;
+}
+
+.card-grid {
+  background-image: linear-gradient(
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, TILE_SIZE } from '@/lib/constants';
 import { TileMap } from './TileMap';
+import { SpriteSheet } from './SpriteSheet';
 import { Camera } from './Camera';
 import { Player, type KeyState } from './Player';
 import { NPC, CLASSROOM_NPCS } from './NPC';
@@ -16,19 +17,38 @@ import { ART_STUDIO_MAP } from './maps/art-studio';
 import { LIBRARY_MAP } from './maps/library';
 import { useFocusFlowStore } from '@/store/useFocusFlowStore';
 import type { MapDefinition } from './MapDefinition';
+import {
+  SPRITE_SHEET_PATH,
+  SPRITE_TILE_SIZE,
+  SPRITE_MARGIN,
+  CHARACTER_SPRITES,
+} from '@/lib/sprite-config';
 
 const ALL_MAPS: MapDefinition[] = [
   CLASSROOM_MAP, CAMPUS_MAP,
   SIMULATOR_MAP, SCIENCE_LAB_MAP, ART_STUDIO_MAP, LIBRARY_MAP,
 ];
 
-function getNPCsForMap(mapId: string): NPC[] {
+function getNPCsForMap(mapId: string, spriteSheet?: SpriteSheet): NPC[] {
   const mapDef = ALL_MAPS.find((m) => m.id === mapId);
   if (!mapDef) return [];
   const activeIds = new Set(mapDef.npcs);
   return CLASSROOM_NPCS
     .filter((cfg) => activeIds.has(cfg.id))
-    .map((cfg) => new NPC(cfg));
+    .map((cfg) => {
+      const npc = new NPC(cfg);
+      if (cfg.id === 'coach-byte') {
+        npc.setStandaloneImage(
+          '/sprites/coach-byte.png',
+          { sx: 950, sy: 30, sw: 900, sh: 1280 },
+          48,
+        );
+      } else if (spriteSheet) {
+        const coord = CHARACTER_SPRITES[cfg.id];
+        if (coord) npc.setSprite(spriteSheet, coord);
+      }
+      return npc;
+    });
 }
 
 export interface GameState {
@@ -90,13 +110,23 @@ export default function GameCanvas({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    ctx.imageSmoothingEnabled = false;
+
+    const charSheet = new SpriteSheet(
+      SPRITE_SHEET_PATH,
+      SPRITE_TILE_SIZE,
+      SPRITE_TILE_SIZE,
+      SPRITE_MARGIN,
+    );
+
     const sceneManager = new SceneManager(ALL_MAPS, 'classroom');
     const startMap = sceneManager.getCurrentMap();
 
     let tileMap = new TileMap(startMap);
     const camera = new Camera(tileMap.cols, tileMap.rows);
     const player = new Player(9, 12);
-    let npcs = getNPCsForMap(sceneManager.currentMapId);
+    player.setSprite(charSheet, CHARACTER_SPRITES['player']);
+    let npcs = getNPCsForMap(sceneManager.currentMapId, charSheet);
     const interaction = new InteractionManager();
 
     tileMapRef.current = tileMap;
@@ -169,7 +199,7 @@ export default function GameCanvas({
             player.y = completedExit.targetRow * TILE_SIZE;
             camera.snapTo(player.x, player.y);
 
-            npcs = getNPCsForMap(sceneManager.currentMapId);
+            npcs = getNPCsForMap(sceneManager.currentMapId, charSheet);
             npcsRef.current = npcs;
             interaction.update(player, npcs);
           });
@@ -178,6 +208,7 @@ export default function GameCanvas({
 
       // ── Draw ──
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      ctx.imageSmoothingEnabled = false;
 
       const cam = camera;
       const mastery = avgMastery;

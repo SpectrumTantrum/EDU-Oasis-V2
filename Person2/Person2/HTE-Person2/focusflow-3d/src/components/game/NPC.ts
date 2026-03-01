@@ -1,5 +1,6 @@
 import { TILE_SIZE, INTERACTION_RANGE, DIRECTION_INDEX, type Direction } from '@/lib/constants';
 import { SpriteSheet } from './SpriteSheet';
+import type { SpriteCoord } from '@/lib/sprite-config';
 import type { Camera } from './Camera';
 
 export interface NPCOption {
@@ -35,6 +36,10 @@ export class NPC {
   direction: Direction = 'down';
 
   private sprite: SpriteSheet | null = null;
+  private spriteCoord: SpriteCoord | null = null;
+  private standaloneImage: HTMLImageElement | null = null;
+  private standaloneCrop: { sx: number; sy: number; sw: number; sh: number } | null = null;
+  private standaloneRenderH = TILE_SIZE;
   private bobOffset = 0;
   private bobTimer = 0;
   private inRange = false;
@@ -52,8 +57,21 @@ export class NPC {
     this.y = config.row * TILE_SIZE;
   }
 
-  setSprite(sprite: SpriteSheet): void {
+  setSprite(sprite: SpriteSheet, coord?: SpriteCoord): void {
     this.sprite = sprite;
+    if (coord) this.spriteCoord = coord;
+  }
+
+  setStandaloneImage(
+    src: string,
+    crop?: { sx: number; sy: number; sw: number; sh: number },
+    renderHeight?: number,
+  ): void {
+    const img = new Image();
+    img.src = src;
+    if (crop) this.standaloneCrop = crop;
+    if (renderHeight) this.standaloneRenderH = renderHeight;
+    img.onload = () => { this.standaloneImage = img; };
   }
 
   getBounds(): { x: number; y: number; w: number; h: number } {
@@ -97,9 +115,32 @@ export class NPC {
     const drawX = Math.round(this.x - camera.x);
     const drawY = Math.round(this.y - camera.y + this.bobOffset);
 
-    if (this.sprite?.isReady()) {
-      const dirRow = DIRECTION_INDEX[this.direction];
-      this.sprite.drawFrame(ctx, 0, dirRow, drawX, drawY);
+    if (this.standaloneImage) {
+      const crop = this.standaloneCrop;
+      const srcX = crop ? crop.sx : 0;
+      const srcY = crop ? crop.sy : 0;
+      const srcW = crop ? crop.sw : this.standaloneImage.width;
+      const srcH = crop ? crop.sh : this.standaloneImage.height;
+      const aspect = srcW / srcH;
+      const dH = this.standaloneRenderH;
+      const dW = dH * aspect;
+      const offsetX = (TILE_SIZE - dW) / 2;
+      const offsetY = TILE_SIZE - dH;
+      ctx.drawImage(
+        this.standaloneImage,
+        srcX, srcY, srcW, srcH,
+        drawX + offsetX, drawY + offsetY, dW, dH,
+      );
+    } else if (this.sprite?.isReady() && this.spriteCoord) {
+      this.sprite.drawFrame(
+        ctx,
+        this.spriteCoord.col,
+        this.spriteCoord.row,
+        drawX,
+        drawY,
+        TILE_SIZE,
+        TILE_SIZE,
+      );
     } else {
       SpriteSheet.drawPlaceholder(
         ctx,

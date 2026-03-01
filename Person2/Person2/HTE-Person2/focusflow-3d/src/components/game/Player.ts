@@ -1,5 +1,6 @@
 import { TILE_SIZE, PLAYER_SPEED, DIRECTION_INDEX, type Direction } from '@/lib/constants';
 import { SpriteSheet } from './SpriteSheet';
+import type { SpriteCoord } from '@/lib/sprite-config';
 import type { Camera } from './Camera';
 import type { TileMap } from './TileMap';
 import type { NPC } from './NPC';
@@ -19,10 +20,11 @@ export class Player {
   direction: Direction = 'down';
   isMoving = false;
   private sprite: SpriteSheet | null = null;
+  private spriteCoord: SpriteCoord | null = null;
 
   private animFrame = 0;
   private animTimer = 0;
-  private readonly animSpeed = 8; // frames between animation ticks
+  private readonly animSpeed = 8;
 
   readonly color = '#4080c0';
   readonly label = 'You';
@@ -32,8 +34,9 @@ export class Player {
     this.y = startRow * TILE_SIZE;
   }
 
-  setSprite(sprite: SpriteSheet): void {
+  setSprite(sprite: SpriteSheet, coord?: SpriteCoord): void {
     this.sprite = sprite;
+    if (coord) this.spriteCoord = coord;
   }
 
   update(keys: KeyState, tileMap: TileMap, npcs: NPC[]): void {
@@ -111,13 +114,19 @@ export class Player {
   draw(ctx: CanvasRenderingContext2D, camera: Camera): void {
     const drawX = Math.round(this.x - camera.x);
     const drawY = Math.round(this.y - camera.y);
+    const bob = this.isMoving ? 0 : Math.sin(Date.now() / 400) * 1;
 
-    if (this.sprite?.isReady()) {
-      const dirRow = DIRECTION_INDEX[this.direction];
-      this.sprite.drawFrame(ctx, this.animFrame, dirRow, drawX, drawY);
+    if (this.sprite?.isReady() && this.spriteCoord) {
+      this.sprite.drawFrame(
+        ctx,
+        this.spriteCoord.col,
+        this.spriteCoord.row,
+        drawX,
+        drawY + bob,
+        TILE_SIZE,
+        TILE_SIZE,
+      );
     } else {
-      // Idle bob effect
-      const bob = this.isMoving ? 0 : Math.sin(Date.now() / 400) * 1;
       SpriteSheet.drawPlaceholder(
         ctx,
         drawX,
@@ -127,7 +136,6 @@ export class Player {
         DIRECTION_INDEX[this.direction],
       );
 
-      // Skin-colored head
       ctx.fillStyle = '#f0c080';
       ctx.fillRect(drawX + 10, drawY + 2, 12, 10);
       ctx.strokeStyle = '#202020';

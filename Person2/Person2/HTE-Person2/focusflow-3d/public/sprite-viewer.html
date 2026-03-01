@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html><head><style>
+body{background:#222;color:#fff;font-family:monospace;margin:20px}
+.grid{display:flex;flex-wrap:wrap;gap:4px}
+.tile{text-align:center;cursor:pointer;border:1px solid #444;padding:2px}
+.tile:hover{border-color:#ff0}
+.tile canvas{display:block;image-rendering:pixelated;width:48px;height:48px}
+.label{font-size:9px;color:#aaa}
+#selected{margin:20px 0;padding:10px;background:#333;border-radius:8px}
+#selected canvas{image-rendering:pixelated;width:128px;height:128px}
+</style></head><body>
+<h2>Sprite Viewer — Rows <select id="rowSel"></select></h2>
+<div id="selected"><canvas width="16" height="16"></canvas><pre id="selInfo">Click a tile</pre></div>
+<div id="grid" class="grid"></div>
+<script>
+const COLS=57,ROWS=31,TS=16,M=1;
+const img=new Image();
+img.onload=()=>{
+  const sel=document.getElementById('rowSel');
+  for(let r=0;r<ROWS;r++){const o=document.createElement('option');o.value=r;o.textContent='Row '+r;sel.appendChild(o);}
+  const oAll=document.createElement('option');oAll.value='all';oAll.textContent='All';sel.appendChild(oAll);
+  sel.value='3';
+  function renderRow(sr,er){
+    const g=document.getElementById('grid');g.innerHTML='';
+    for(let r=sr;r<=er&&r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const d=document.createElement('div');d.className='tile';
+        const cv=document.createElement('canvas');cv.width=TS;cv.height=TS;
+        cv.getContext('2d').drawImage(img,c*(TS+M),r*(TS+M),TS,TS,0,0,TS,TS);
+        d.appendChild(cv);
+        const l=document.createElement('div');l.className='label';l.textContent=c+','+r;d.appendChild(l);
+        d.onclick=()=>{
+          const sc=document.querySelector('#selected canvas'),sctx=sc.getContext('2d');
+          sctx.clearRect(0,0,16,16);sctx.drawImage(img,c*(TS+M),r*(TS+M),TS,TS,0,0,TS,TS);
+          document.getElementById('selInfo').textContent='Selected: ('+c+', '+r+')';
+        };
+        g.appendChild(d);
+      }
+    }
+  }
+  renderRow(3,3);
+  sel.addEventListener('change',()=>{const v=sel.value;if(v==='all')renderRow(0,ROWS-1);else renderRow(parseInt(v),parseInt(v));});
+};
+img.src='/sprites/roguelikeSheet_transparent.png';
+</script></body></html>
